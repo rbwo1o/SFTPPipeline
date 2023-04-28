@@ -16,8 +16,11 @@
 3). Hashlib
         This module contains crpytographic and hashing functions that are used in the application.
 
-4). PySFTP
+4). MySQL-Connector
+        This module allows for python to interact with MySQL databases.
+
+5). PySFTP
         This module is the SFTP framework the application used to send files to SFTP servers.
 
-5). PyInstaller
+6). PyInstaller
         This module is used to package the solution into an executable that can be used on systems without the python framework installed.
