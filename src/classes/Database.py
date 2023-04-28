@@ -1,7 +1,7 @@
 # ***********************************************************************************************************************
 # *                                                                                                                     *
 # *   Database.py                                                                                                       *
-# *   Authors: Robert B. Wilson, Alex Baker, Jordan Phillips, Gabriel Snider, Steven Dorsey, Yoshinori Agari            *
+# *   Author: Robert B. Wilson                                                                                          *
 # *   The purpose of this file is to provide a easy way to interact with the SFTPPipeline database                      *
 # *   Each function uses prepared statements to prevent sql-injection                                                   *
 # *                                                                                                                     *
@@ -48,6 +48,7 @@ class Database:
         if self is not None:
             self.__cur.close()
             self.__con.close()
+            pass
 
 
 
@@ -66,7 +67,7 @@ class Database:
             # Changelog information
             now = datetime.now()
             message = f"Could not insert {username} into the 'Users' table"
-            debug = e
+            debug = str(e)
             # Add entry
             self.addChangelog(self, now, message, debug)
             
@@ -87,7 +88,7 @@ class Database:
             # Changelog information
             now = datetime.now()
             message = f"Could not delete user username={username} from 'Users' table"
-            debug = e
+            debug = str(e)
             # Add entry
             self.addChangelog(now, message, debug)
 
@@ -107,7 +108,7 @@ class Database:
             # Changelog information
             now = datetime.now()
             message = "Could not retrieve users from the 'Users' table"
-            debug = e
+            debug = str(e)
             # Add entry
             self.addChangelog(now, message, debug)
 
@@ -127,7 +128,7 @@ class Database:
             # Changelog information
             now = datetime.now()
             message = "Could not retrieve users from the 'Users' table"
-            debug = e
+            debug = str(e)
             # Add entry
             self.addChangelog(now, message, debug)
 
@@ -145,7 +146,7 @@ class Database:
             self.__con.commit()
         # Print on fail
         except mysql.connector.Error as e:
-            print(e)
+            print(str(e))
     
 
 
@@ -164,7 +165,7 @@ class Database:
             # Changelog information
             now = datetime.now()
             message = f"Could not delete entry id={id}from 'Changelogs' table"
-            debug = e
+            debug = str(e)
             # Add entry
             self.addChangelog(now, message, debug)
 
@@ -185,7 +186,7 @@ class Database:
             # Changelog information
             now = datetime.now()
             message = "Could not retrieve enteries from the 'Changelog' table"
-            debug = e
+            debug = str(e)
             # Add entry
             self.addChangelog(now, message, debug)
 
@@ -207,7 +208,7 @@ class Database:
             # Changelog information
             now = datetime.now()
             message = f"Could not insert file preset_id={presetID} and path={filepath} into the 'Files' table"
-            debug = e
+            debug = str(e)
             # Add entry
             self.addChangelog(now, message, debug)
 
@@ -228,7 +229,7 @@ class Database:
             # Changelog information
             now = datetime.now()
             message = "Could not delete entry Preset_ID={presetID}"
-            debug = e
+            debug = str(e)
             # Add entry
             self.addChangelog()
 
@@ -260,12 +261,16 @@ class Database:
             # Changelog information
             now = datetime.now()
             message = f"Could not create Preset with Name={name}"
-            debug = e
+            debug = str(e)
             # Add entry
             self.addChangelog(now, message, debug)
 
 
 
+    # Function: addPresetConnectionRelation
+    # Parameters: PresetID, ConnectionID
+    # Return: None
+    # Adds a new Preset to Connection entry by inserting preset Id and connection Id into the intermediate Presets_Connections_Relations table
     def addPresetConnectionRelation(self, presetID, connectionID):
         sql = "INSERT INTO Presets_Connections_Relations(Preset_ID, Connection_ID) VALUES (%s, %s)"
         try:
@@ -278,6 +283,7 @@ class Database:
             debug = e
             # Add entry
             self.addChangelog(now, message, debug)
+
 
 
     # Function: deletePreset
@@ -303,10 +309,42 @@ class Database:
             # Changelog information
             now = datetime.now()
             message = "Could not delete preset where ID={id} or Files where Preset_ID={id}"
-            debug = e
+            debug = str(e)
             # Add entry
-            self.addChangelog()
+            self.addChangelog(now, message, debug)
     
+
+
+    # delete preset - list of names
+    # for each preset name
+        # get presetID
+        # delete Connnection Relations
+        # delete Files
+        # delete Preset
+    def deletePresets(self, preset):
+        # preset ID
+        sql = 'SELECT ID FROM Presets WHERE NAME = %s'
+        # get preset ID
+        self.__cur.execute(sql, (preset,))
+        Preset_ID = self.__cur.fetchall()
+        Preset_ID = list(Preset_ID)
+        print(Preset_ID)
+        # delete relations
+        deleteRelationsSql = 'DELETE FROM Presets_Connections_Relations WHERE Preset_ID = %s'
+        deleteFilesSql = 'DELETE FROM Files WHERE Preset_ID = %s'
+        deletePresetSql = 'DELETE FROM Presets WHERE ID = %s'
+        for id in Preset_ID:
+            self.__cur.execute(deleteRelationsSql, (id[0],))
+            self.__cur.execute(deleteFilesSql, (id[0],))
+            self.__cur.execute(deletePresetSql, (id[0],))
+            self.__con.commit()
+        
+
+
+
+
+
+            
 
 
     # Function getPresets
@@ -335,10 +373,31 @@ class Database:
             # Changelog information
             now = datetime.now()
             message = 'Could not retrieve Preset data and associated files'
-            debug = e
+            debug = str(e)
             # Add entry
             self.addChangelog(now, message, debug)
     
+
+
+    # Function: getPresetNames
+    # Parameters: None
+    # Return: List of Preset Names
+    # Selects all preset names and returns them
+    def getPresetNames(self):
+        sql = 'SELECT * FROM Presets'
+        try:
+            self.__cur.execute(sql)
+            presets = [entry[1] for entry in self.__cur.fetchall()]
+            return presets
+        except mysql.connector.Error as e:
+            # Changelog information
+            now = datetime.now()
+            message = 'Could not retrieve Preset names'
+            debug = str(e)
+            # Add entry
+            self.addChangelog(now, message, debug)
+
+
 
 
     # Function: addConnection
@@ -354,12 +413,16 @@ class Database:
             # Changelog information
             now = datetime.now()
             message = "Could not create connection with name={server}"
-            debug = e
+            debug = str(e)
             # Add entry
-            self.addChangelog()
+            self.addChangelog(now, message, debug)
 
 
 
+    # Function: getConnections
+    # Parameters: None
+    # Return: Connection data
+    # returns all SFTP Connection data
     def getConnections(self):
         sql = "SELECT * FROM Connections"
         # Attempt to retrieve all enteries from the Connections table
@@ -371,12 +434,16 @@ class Database:
             # Changelog information
             now = datetime.now()
             message = "Could not retrieve enteries from the 'Connections' table"
-            debug = e
+            debug = str(e)
             # Add entry
             self.addChangelog(now, message, debug)
     
 
 
+    # Function: deleteConnection
+    # Parameters: ConnectionID
+    # Return: None
+    # Deletes SFTP Connection information based on connection ID
     def deleteConnection(self, connectionID):
         sql = "DELETE FROM Presets_Connections_Relations WHERE Connection_ID = %s"
         sql2 = "DELETE FROM Connections WHERE ID = %s"
@@ -389,12 +456,17 @@ class Database:
         except mysql.connector.Error as e:
             # Changelog information
             now = datetime.now()
-            #message = "Could not delete entry Connection_ID={presetID}"
-            debug = e
+            message = "Could not delete entry Connection_ID={presetID}"
+            debug = str(e)
             # Add entry
-            #self.addChangelog()
+            self.addChangelog(now, message, debug)
 
 
+
+    # Function: getConnection
+    # Parameters: Server Name, Remote directory
+    # Return: SFTP Connection data
+    # returns SFTP connection data where the server name and remote directory match the name and remote directory parameters
     def getConnection(self, name, remoteDirectory):
         sql = "SELECT * FROM Connections WHERE Server = %s AND Remote_Directory = %s"
         # Attempt to retrieve all enteries from the Connections table
@@ -406,11 +478,212 @@ class Database:
             # Changelog information
             now = datetime.now()
             message = "Could not retrieve enteries from the 'Connections' table"
-            debug = e
+            debug = str(e)
             # Add entry
             self.addChangelog(now, message, debug)
 
 
-    # add a job
-    # delete a job
-    # view all jobs
+
+    # Function: getConnectionCredentials
+    # Parameters: Server Name
+    # Return: Username and password of the server
+    # Returns server credentials of the server that matches the server name parameter
+    def getConnectionCredentials(self, server):
+        sql = "SELECT Username, Password FROM Connections WHERE Server = %s"
+        try:
+            self.__cur.execute(sql, (server,))
+            return self.__cur.fetchall()
+        except mysql.connector.Error as e:
+            now = datetime.now()
+            message = "Could not retrieve enteries from the 'Connections' table"
+            debug = str(e)
+            # Add entry
+            self.addChangelog(now, message, debug)
+
+
+
+    # Function: getRelations
+    # Parameters: Preset Name
+    # Return: List of relations
+    # returns a custom data structure of relational information of files to SFTP servers
+    def getRelations(self, name):
+        # get preset id
+        # get files
+        # get connections
+        #print(name)
+        Preset_ID_SQL = 'SELECT ID FROM Presets WHERE Name = %s'
+        Files_SQL = 'SELECT File_Path FROM Files WHERE Preset_ID = %s'
+        Connection_Relation_SQL = 'SELECT Connection_ID FROM Presets_Connections_Relations WHERE Preset_ID = %s'
+        Connection_SQL = 'SELECT Server, Remote_Directory FROM Connections WHERE ID = %s'
+        relations = ([],[])
+        try:
+            # get preset ID
+            self.__cur.execute(Preset_ID_SQL, (name,))
+            Preset_ID = self.__cur.fetchall()
+            # get associated files
+            self.__cur.execute(Files_SQL, (Preset_ID[0][0],))
+            Files = self.__cur.fetchall()
+            # add path to relation list
+            for file in Files:
+                relations[0].append(file[0])
+            # get sftp connections
+            self.__cur.execute(Connection_Relation_SQL, (Preset_ID[0][0],))
+            ConnectionIDs = self.__cur.fetchall()
+            # append sftp connection information
+            for id in ConnectionIDs:
+                self.__cur.execute(Connection_SQL, (id[0],))
+                temp = self.__cur.fetchall()
+                relations[1].append(temp[0])
+            # Done
+            return relations
+        except mysql.connector.Error as e:
+            # Changelog information
+            now = datetime.now()
+            message = "Error"
+            debug = str(e)
+            # Add entry
+            self.addChangelog(now, message, debug)
+
+
+    
+    # Function: addJob
+    # Parameters: Job Name, Powershell Command, associated preset, schedule, start time, start date, end date
+    # Return: None
+    # Adds a new Job entry to the database
+    def addJob(self, name, command, preset, schedule, startTime, startDate, endDate):
+        sql = "INSERT INTO Jobs (Name, Command, Schedule, StartTime, StartDate, EndDate, Preset_ID) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+        presetIDSQL = "SELECT ID FROM Presets WHERE Name = %s"
+        try:
+            self.__cur.execute(presetIDSQL, (preset,))
+            Preset_ID = self.__cur.fetchall()
+
+            self.__cur.execute(sql, (name, command, schedule, startTime, startDate, endDate, Preset_ID[0][0]))
+            self.__con.commit()            
+        except mysql.connector.Error as e:
+            # Changelog information
+            now = datetime.now()
+            message = "Could not create connection with name"
+            debug = str(e)
+            # Add entry
+            self.addChangelog(now, message, debug)
+    
+
+
+    # Function: getPreset
+    # Parameter: ID
+    # Return: Preset Name
+    # returns the name of a preset where the preset ID matches the ID parameter
+    def getPreset(self, id):
+        sql = "SELECT Name FROM Presets WHERE ID = %s"
+        try:
+            self.__cur.execute(sql, (id,))
+            Preset = self.__cur.fetchall()
+            return Preset          
+        except mysql.connector.Error as e:
+            # Changelog information
+            now = datetime.now()
+            message = "Could not create connection with name"
+            debug = str(e)
+            # Add entry
+            self.addChangelog(now, message, debug)
+    
+
+
+
+    # Function: getPresetID
+    # Parameter: Preset Name
+    # Return: ID of Preset
+    # returns preset ID where preset name matches the name parameter
+    def getPresetID(self, name):
+        sql = "SELECT ID FROM Presets WHERE Name = %s"
+        try:
+            self.__cur.execute(sql, (name,))
+            Preset = self.__cur.fetchall()
+            return Preset          
+        except mysql.connector.Error as e:
+            # Changelog information
+            now = datetime.now()
+            message = "Could not create connection with name"
+            debug = str(e)
+            # Add entry
+            self.addChangelog(now, message, debug)
+
+
+
+    # Function: getJobs
+    # Parameters: None
+    # Return: None
+    # returns all jobs and their associated data
+    def getJobs(self):
+        sql = "SELECT * FROM Jobs"
+        try:
+            self.__cur.execute(sql, ())
+            Jobs = self.__cur.fetchall()
+            return Jobs
+        except mysql.connector.Error as e:
+            # Changelog information
+            now = datetime.now()
+            message = "Could not create connection with name"
+            debug = str(e)
+            # Add entry
+            self.addChangelog(now, message, debug)
+    
+
+
+
+    # Function: deleteJob
+    # Parameters: Name of job
+    # Return: None
+    # Deletes a job where the name matches the name parameter
+    def deleteJob(self, name):
+        sql = "DELETE FROM Jobs WHERE Name = %s"
+        try:
+            self.__cur.execute(sql, (name,))
+            self.__con.commit()
+        except mysql.connector.Error as e:
+            # Changelog information
+            now = datetime.now()
+            message = "Could not create connection with name"
+            debug = str(e)
+            # Add entry
+            self.addChangelog(now, message, debug)
+    
+
+
+    # Function: getPresetByID
+    # Parameters: PresetID
+    # Return: Data associated with a particular preset
+    # Returns data associated with a particular preset where the preset ID matches the ID parameter
+    def getPresetByID(self, ID):
+        sql = "SELECT * FROM Presets WHERE ID = %s"
+        try:
+            self.__cur.execute(sql, (ID,))
+            Presets = self.__cur.fetchall()
+            return Presets
+        except mysql.connector.Error as e:
+            # Changelog information
+            now = datetime.now()
+            message = f"Could not get Preset {ID}"
+            debug = str(e)
+            # Add entry
+            self.addChangelog(now, message, debug)
+    
+
+
+    # Function: getJobByName
+    # Parameters: name of a job
+    # Return: Data associated with a particular job
+    # Returns data associated with a job where the job matches the name parameter
+    def getJobByName(self, name):
+        sql = "SELECT * FROM Jobs WHERE Name = %s"
+        try:
+            self.__cur.execute(sql, (name,))
+            Job = self.__cur.fetchall()
+            return Job
+        except mysql.connector.Error as e:
+            # Changelog information
+            now = datetime.now()
+            message = "Could not create connection with name"
+            debug = str(e)
+            # Add entry
+            self.addChangelog(now, message, debug)

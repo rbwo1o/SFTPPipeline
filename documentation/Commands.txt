@@ -1,14 +1,14 @@
 /**********************************************************************************************************************
 *                                                                                                                     *
 *   Commands.txt                                                                                                      *
-*   Authors: Robert B. Wilson, Alex Baker, Jordan Phillips, Gabriel Snider, Steven Dorsey, Yoshinori Agari            *
+*   Author: Robert B. Wilson                                                                                          *
 *   The purpose of this file is to explain commands used SFTPPipeline                                                 *
 *       -> this includes commands for both compilation of source code, and understood command line parameters.        *
 *                                                                                                                     *
 ***********************************************************************************************************************/
 
 
-Command Line Parameters
+Compilation Commands
 _______________________________________________________________________________________________________________________
 
 1) Convert .ui files to .py files -> This command can be used to convert .ui files created in QTDesigner to .py files
@@ -16,7 +16,26 @@ that can be used as views in the SFTPPipeline application.
 
 pyuic5 -x example.ui -o example.py 
 
+2) Package entire solution for an enviroment not running python
+
+pyinstaller --add-data "views;views" --add-data "assets;assets" SFTPPipeline.py
 
 
-Compilation Commands
+Application Commands
 _______________________________________________________________________________________________________________________
+
+1) Start the application using the python files
+
+python ./SFTPPipeline.py
+
+2) Upload files as a command line parameter - used in automated uploads
+
+python ./SFTPPipeline Preset_ID1 Preset_ID2 Preset_ID3 ..etc
+
+3) Start application from command line
+
+start SFTPPipeline.exe
+
+4) Upload files as a command line parameter - used in automated uploads
+
+start SFTPPipeline.exe Preset_ID1 Preset_ID2 Preset_ID3 ..etc

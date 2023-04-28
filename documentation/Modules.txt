@@ -1,7 +1,7 @@
 /**********************************************************************************************************************
 *                                                                                                                     *
 *   Modules.txt                                                                                                       *
-*   Authors: Robert B. Wilson, Alex Baker, Jordan Phillips, Gabriel Snider, Steven Dorsey, Yoshinori Agari            *
+*   Author: Robert B. Wilson                                                                                          *
 *   The purpose of this file is to explain the use case of all external modules used in SFTPPipeline.                 *
 *                                                                                                                     *
 ***********************************************************************************************************************/
@@ -15,3 +15,9 @@
 
 3). Hashlib
         This module contains crpytographic and hashing functions that are used in the application.
+
+4). PySFTP
+        This module is the SFTP framework the application used to send files to SFTP servers.
+
+5). PyInstaller
+        This module is used to package the solution into an executable that can be used on systems without the python framework installed.

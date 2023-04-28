@@ -1,7 +1,7 @@
 /**********************************************************************************************************************
 *                                                                                                                     *
 *   database.sql                                                                                                      *
-*   Authors: Robert B. Wilson, Alex Baker, Jordan Phillips, Gabriel Snider, Steven Dorsey, Yoshinori Agari            *
+*   Author: Robert B. Wilson                                                                                          *
 *   The purpose of this file is to implement the SFTPPipeline database schema.                                        *
 *                                                                                                                     *
 ***********************************************************************************************************************/
@@ -20,12 +20,14 @@ CREATE TABLE Presets (
 ) ENGINE = InnoDB;
 
 
+
 CREATE TABLE Files (
     ID INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
     File_Path VARCHAR(255) NOT NULL,
     Preset_ID INT,
     FOREIGN KEY (Preset_ID) REFERENCES Presets(ID)
 ) ENGINE = InnoDB;
+
 
 
 CREATE TABLE Connections (
@@ -36,6 +38,8 @@ CREATE TABLE Connections (
     Remote_Directory VARCHAR(250) NOT NULL
 ) ENGINE = InnoDB;
 
+
+
 CREATE TABLE Presets_Connections_Relations (
     ID INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
     Preset_ID INT,
@@ -44,20 +48,21 @@ CREATE TABLE Presets_Connections_Relations (
     FOREIGN KEY (Connection_ID) REFERENCES Connections(ID)
 ) ENGINE = InnoDB;
 
+
+
 CREATE TABLE Jobs (
     ID INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    Name VARCHAR(255) NOT NULL,
-    Description VARCHAR (500),
-    Start_Trigger VARCHAR(100) NOT NULL,
-    Calendar DATETIME NOT NULL,
-    Recurrence INT NOT NULL,
+    Name VARCHAR(255) NOT NULL, -- /tn
+    Command VARCHAR(255) NOT NULL, -- /tr
+    Schedule VARCHAR(15) NOT NULL, -- /sc
+    StartTime VARCHAR(20) NOT NULL, -- /st
+    StartDate VARCHAR(20), -- /sd
+    EndDate VARCHAR(20), -- /ed
     Preset_ID INT NOT NULL,
     -- Foreign Key: Command line argument -> one to many relationship for Presets --
     FOREIGN KEY (Preset_ID) REFERENCES Presets(ID)
 ) ENGINE = InnoDB;
 
-
--------------------------------------------------------------------------
 
 
 CREATE TABLE Users (
@@ -65,6 +70,7 @@ CREATE TABLE Users (
     Username VARCHAR(255) NOT NULL,
     Password VARCHAR(255) NOT NULL
 ) ENGINE = InnoDB;
+
 
 
 CREATE TABLE Changelogs (
